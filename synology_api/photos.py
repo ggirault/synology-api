@@ -228,3 +228,10 @@ class Photos:
 
         return self.request_data(api_name, api_path, req_param)
 
+    def get_team_thumbnail(self, id, cache_key, size='sm'):
+        api_name = 'SYNO.FotoTeam.Thumbnail'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'get', 'type': 'unit', 'id': id, 'cache_key': cache_key, 'size': size}
+
+        return self.request_data(api_name, api_path, req_param, response_json=False)
