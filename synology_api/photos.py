@@ -213,3 +213,18 @@ class Photos:
     def list_team_tag_item(self, id, offset=0, limit=100, additional=None):
         return self._list_item('SYNO.FotoTeam.Browse.Item', offset, limit, additional, general_tag_id=id)
 
+    def _list_item(self, api_name, offset, limit, additional, **kwargs):
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'list', 'offset': offset, 'limit': limit, 'additional': json.dumps(additional), **kwargs}
+
+        return self.request_data(api_name, api_path, req_param)
+
+    def get_team_item(self, id, additional=None):
+        api_name = 'SYNO.FotoTeam.Browse.Item'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'get', 'id': json.dumps([id]), 'additional': json.dumps(additional)}
+
+        return self.request_data(api_name, api_path, req_param)
+
