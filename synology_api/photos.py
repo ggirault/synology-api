@@ -45,6 +45,12 @@ class Photos:
     def list_teams_folders(self, folder_id=0, limit=2000, offset=0, additional=None):
         return self._list_folders(folder_id, limit, offset, additional, 'SYNO.FotoTeam.Browse.Folder')
 
+    def list_tags(self, folder_id=0, limit=2000, offset=0, additional=None):
+        return self._list_folders(folder_id, limit, offset, additional, 'SYNO.Foto.Browse.GeneralTag')
+
+    def list_team_tags(self, folder_id=0, limit=2000, offset=0, additional=None):
+        return self._list_folders(folder_id, limit, offset, additional, 'SYNO.FotoTeam.Browse.GeneralTag')
+
     def _list_folders(self, folder_id, limit, offset, additional, api_name):
         if additional is None:
             additional = []
@@ -94,6 +100,24 @@ class Photos:
                 return
         return folder
 
+    def lookup_tag_folder(self, name):
+        return self._lookup_tag_folder(name, 'SYNO.Foto.Browse.GeneralTag', 'SYNO.Foto.Browse.GeneralTag')
+
+    def lookup_team_tag_folder(self, name):
+        return self._lookup_tag_folder(name, 'SYNO.FotoTeam.Browse.GeneralTag', 'SYNO.FotoTeam.Browse.GeneralTag')
+
+    def _lookup_tag_folder(self, name, api_name_count, api_name_list):
+        parent = 0
+        count_response = self._count_folders(parent, api_name_count)
+        if not count_response['success']:
+            return
+        count = count_response['data']['count']
+        for offset in range(0, count, 1000):
+            folders_response = self._list_folders(parent, limit=1000, offset=offset, additional=None, api_name=api_name_list)
+            if not folders_response['success']:
+                return
+            folder = next(filter(lambda elem: elem['name'] == name, folders_response['data']['list']), None)
+        return folder
 
     def get_album(self, album_id, additional=None):
         if not isinstance(album_id, list):
@@ -185,4 +209,39 @@ class Photos:
         req_param = {'version': info['maxVersion'], 'method': 'list_user_group', 'team_space_sharable_list': team_space_sharable_list}
 
         return self.request_data(api_name, api_path, req_param)
+
+    def list_team_tag_item(self, id, offset=0, limit=100, additional=None):
+        return self._list_item('SYNO.FotoTeam.Browse.Item', offset, limit, additional, general_tag_id=id)
+
+    def _list_item(self, api_name, offset, limit, additional, **kwargs):
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'list', 'offset': offset, 'limit': limit, 'additional': json.dumps(additional), **kwargs}
+
+        return self.request_data(api_name, api_path, req_param)
+
+    def get_team_item(self, id, additional=None):
+        api_name = 'SYNO.FotoTeam.Browse.Item'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'get', 'id': json.dumps([id]), 'additional': json.dumps(additional)}
+
+        return self.request_data(api_name, api_path, req_param)
+
+    def get_team_thumbnail(self, id, cache_key, size='sm'):
+        api_name = 'SYNO.FotoTeam.Thumbnail'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'get', 'type': 'unit', 'id': id, 'cache_key': cache_key, 'size': size}
+
+        return self.request_data(api_name, api_path, req_param, response_json=False)
+
+    def get_team_download(self, id):
+        api_name = 'SYNO.FotoTeam.Download'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'download', 'item_id': json.dumps([id])}
+        # req_param = {'version': info['maxVersion'], 'method': 'download', 'item_id': [id]}
+
+        return self.request_data(api_name, api_path, req_param, response_json=False)
 
