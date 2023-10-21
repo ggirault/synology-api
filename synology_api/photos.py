@@ -235,3 +235,13 @@ class Photos:
         req_param = {'version': info['maxVersion'], 'method': 'get', 'type': 'unit', 'id': id, 'cache_key': cache_key, 'size': size}
 
         return self.request_data(api_name, api_path, req_param, response_json=False)
+
+    def get_team_download(self, id):
+        api_name = 'SYNO.FotoTeam.Download'
+        info = self.photos_list[api_name]
+        api_path = info['path']
+        req_param = {'version': info['maxVersion'], 'method': 'download', 'item_id': json.dumps([id])}
+        # req_param = {'version': info['maxVersion'], 'method': 'download', 'item_id': [id]}
+
+        return self.request_data(api_name, api_path, req_param, response_json=False)
+
